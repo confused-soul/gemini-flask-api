@@ -13,7 +13,7 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 app = Flask(__name__)
 
-def base64_to_image(base64_string, output_path):
+def base64_to_image(base64_string):
     """Convert a base64 string to a JPG image and save it to the specified output path."""
     try:
         # Decode the base64 string to bytes
@@ -37,7 +37,7 @@ def generate_content():
             # Usage example
             base64_string =  image_data # Replace with your base64 string
 
-            image = base64_to_image(base64_string, output_path)
+            image = base64_to_image(base64_string)
 
         except Exception as e:
             return jsonify({'error': f'Error processing image: {str(e)}'}), 400
