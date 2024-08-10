@@ -18,12 +18,7 @@ def base64_to_image(base64_string, output_path):
     try:
         # Decode the base64 string to bytes
         image_data = base64.b64decode(base64_string)
-        
-        # Write the image data to a file
-        with open(output_path, "wb") as image_file:
-            image_file.write(image_data)
-        
-        print(f"Image saved as {output_path}")
+        return image_data
     except Exception as e:
         print(f"Error: {e}")
 
@@ -41,9 +36,8 @@ def generate_content():
         try:
             # Usage example
             base64_string =  image_data # Replace with your base64 string
-            output_path = 'output_image.jpg'  # Specify the output file path
 
-            base64_to_image(base64_string, output_path)
+            image = base64_to_image(base64_string, output_path)
 
         except Exception as e:
             return jsonify({'error': f'Error processing image: {str(e)}'}), 400
@@ -53,7 +47,7 @@ def generate_content():
         
         image1 = {
             'mime_type': 'image/jpeg',
-            'data': pathlib.Path('output_image.jpg').read_bytes()
+            'data': image
         }
         response = model.generate_content([prompt, image1])
         return jsonify({'response': response.text})
