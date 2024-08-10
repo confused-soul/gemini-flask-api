@@ -2,8 +2,7 @@ from flask import Flask, request, jsonify
 import google.generativeai as genai
 import os
 import base64
-from PIL import Image
-from io import BytesIO
+import pathlib
 
 # Configure the API key
 my_secret = os.environ.get('API')
@@ -14,39 +13,49 @@ model = genai.GenerativeModel('gemini-1.5-flash')
 
 app = Flask(__name__)
 
+def base64_to_image(base64_string, output_path):
+    """Convert a base64 string to a JPG image and save it to the specified output path."""
+    try:
+        # Decode the base64 string to bytes
+        image_data = base64.b64decode(base64_string)
+        
+        # Write the image data to a file
+        with open(output_path, "wb") as image_file:
+            image_file.write(image_data)
+        
+        print(f"Image saved as {output_path}")
+    except Exception as e:
+        print(f"Error: {e}")
+
 @app.route('/generate', methods=['POST'])
 def generate_content():
     data = request.get_json()
 
-    if 'prompt' not in data:
+    if not data or 'prompt' not in data:
         return jsonify({'error': 'No prompt provided'}), 400
 
     prompt = data['prompt']
-    image_base64 = data.get('image')
+    image_data = data.get('image')
 
-    # Prepare input for the model
-    inputs = [prompt]
-
-    if image_base64:
+    if image_data:
         try:
-            # Decode the base64 image
-            image_data = base64.b64decode(image_base64)
-            image = Image.open(BytesIO(image_data))
-            
-            # Process image (e.g., convert to bytes or use directly)
-            image_bytes = BytesIO()
-            image.save(image_bytes, format='PNG')
-            image_bytes.seek(0)
-            
-            # Add image bytes to the inputs
-            inputs.append(image_bytes.getvalue())
-            
+            # Usage example
+            base64_string =  image_data # Replace with your base64 string
+            output_path = 'output_image.jpg'  # Specify the output file path
+
+            base64_to_image(base64_string, output_path)
+
         except Exception as e:
-            return jsonify({'error': f'Error decoding image: {str(e)}'}), 400
+            return jsonify({'error': f'Error processing image: {str(e)}'}), 400
 
     # Generate content using the Gemini model
     try:
-        response = model.generate_content(inputs)
+        
+        image1 = {
+            'mime_type': 'image/jpeg',
+            'data': pathlib.Path('output_image.jpg').read_bytes()
+        }
+        response = model.generate_content([prompt, image1])
         return jsonify({'response': response.text})
     except Exception as e:
         return jsonify({'error': f'Error generating content: {str(e)}'}), 500
